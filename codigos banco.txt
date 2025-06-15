@@ -1,0 +1,110 @@
+-- Criar ENUM para status da Reserva
+CREATE TYPE status_reserva AS ENUM ('Ativa', 'Cancelada');
+
+-- Criar ENUM para status da Solicitação de Recurso
+CREATE TYPE status_solicitacao AS ENUM ('Pendente', 'Concluída', 'Rejeitada');
+
+-- Tabela de Usuário
+CREATE TABLE Usuario (
+    codigo SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    sobrenome VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    ativo BOOLEAN DEFAULT TRUE,
+    realizar_reservas_fixas BOOLEAN DEFAULT FALSE,
+    administrador BOOLEAN DEFAULT FALSE
+);
+
+-- Tabela de Espaço
+CREATE TABLE Espaco (
+    codigo SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    andar VARCHAR(10),
+    capacidade INT NOT NULL,
+    disponibilidade_reserva_fixa BOOLEAN DEFAULT TRUE,
+    ativo BOOLEAN DEFAULT TRUE
+);
+
+-- Tabela de Recurso
+CREATE TABLE Recurso (
+    codigo SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL
+);
+
+-- Tabela associativa entre Espaco e Recurso
+CREATE TABLE Espaco_Recurso (
+    espaco_codigo INT NOT NULL,
+    recurso_codigo INT NOT NULL,
+    PRIMARY KEY (espaco_codigo, recurso_codigo),
+    FOREIGN KEY (espaco_codigo) REFERENCES Espaco(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (recurso_codigo) REFERENCES Recurso(codigo) ON DELETE CASCADE
+);
+
+-- Tabela de Reserva com ENUM
+CREATE TABLE Reserva (
+    codigo SERIAL PRIMARY KEY,
+    data DATE NOT NULL,
+    horario TIME NOT NULL,
+    status status_reserva DEFAULT 'Ativa',
+    usuario_codigo INT NOT NULL,
+    espaco_codigo INT NOT NULL,
+    FOREIGN KEY (usuario_codigo) REFERENCES Usuario(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (espaco_codigo) REFERENCES Espaco(codigo) ON DELETE CASCADE
+);
+
+-- Tabela de Notificação
+CREATE TABLE Notificacao (
+    codigo SERIAL PRIMARY KEY,
+    mensagem TEXT NOT NULL,
+    grupo_whatsapp VARCHAR(255),
+    reserva_codigo INT,
+    FOREIGN KEY (reserva_codigo) REFERENCES Reserva(codigo) ON DELETE SET NULL
+);
+
+-- Tabela de Solicitação de Recurso com ENUM
+CREATE TABLE Solicitacao_Recurso (
+    codigo SERIAL PRIMARY KEY,
+    status status_solicitacao DEFAULT 'Pendente',
+    recurso_codigo INT NOT NULL,
+    usuario_codigo INT NOT NULL,
+    espaco_codigo INT NOT NULL,
+    FOREIGN KEY (recurso_codigo) REFERENCES Recurso(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (usuario_codigo) REFERENCES Usuario(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (espaco_codigo) REFERENCES Espaco(codigo) ON DELETE CASCADE
+);
+
+-- Tabela de Aula
+CREATE TABLE Aula (
+    codigo SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    usuario_codigo INT NOT NULL,
+    FOREIGN KEY (usuario_codigo) REFERENCES Usuario(codigo) ON DELETE CASCADE
+);
+
+-- Tabela associativa entre Usuario e Aula
+CREATE TABLE Usuario_Aula (
+    usuario_codigo INT NOT NULL,
+    aula_codigo INT NOT NULL,
+    PRIMARY KEY (usuario_codigo, aula_codigo),
+    FOREIGN KEY (usuario_codigo) REFERENCES Usuario(codigo) ON DELETE CASCADE,
+    FOREIGN KEY (aula_codigo) REFERENCES Aula(codigo) ON DELETE CASCADE
+);
+
+INSERT INTO Usuario (
+    nome, 
+    sobrenome, 
+    email, 
+    senha, 
+    ativo, 
+    realizar_reservas_fixas, 
+    administrador
+) VALUES (
+    'Adrielli',
+    'Silva',
+    'sessoriapp@gmail.com',
+    '123@padrao',
+    TRUE,
+    FALSE,  -- Não informado, então mantendo FALSE
+    TRUE
+);
